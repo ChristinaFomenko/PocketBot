@@ -1,2 +1,2 @@
 # PocketBot
-Pocket telegram bot for saving links.
+Pocket app telegram bot for saving links.
