@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/KrisInferno/PocketBot/pkg/repository"
 	"github.com/KrisInferno/PocketBot/pkg/repository/boltdb"
+	"github.com/KrisInferno/PocketBot/pkg/server"
 	"github.com/KrisInferno/PocketBot/pkg/telegram"
 	"github.com/boltdb/bolt"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
@@ -31,7 +32,16 @@ func main() {
 	tokenRepository := boltdb.NewTokenRepository(db)
 
 	telegramBot := telegram.NewBot(bot, pocketClient, tokenRepository, "http://localhost/")
-	if err := telegramBot.Start(); err != nil {
+
+	authorizationServer := server.NewAuthorizationServer(pocketClient, tokenRepository, "https://t.me/pocket_on_helper_bot")
+
+	go func() {
+		if err := telegramBot.Start(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	if err := authorizationServer.Start(); err != nil {
 		log.Fatal(err)
 	}
 
