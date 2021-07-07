@@ -34,7 +34,7 @@ func (b *Bot) handleMessage(message *tgbotapi.Message) error {
 	}
 	accessToken, err := b.getAccessToken(message.Chat.ID)
 	if err != nil {
-		msg.Text = "Ты не авторизован! Используй команду /start."
+		return errUnauthorized
 		_, err := b.bot.Send(msg)
 		return err
 	}
