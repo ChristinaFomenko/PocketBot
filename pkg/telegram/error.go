@@ -1,6 +1,9 @@
 package telegram
 
-import "errors"
+import (
+	"errors"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+)
 
 var (
 	errInvalidURL   = errors.New("url is invalid")
@@ -8,10 +11,20 @@ var (
 	errUnableToSave = errors.New("unable to save")
 )
 
-//msg.Text = "Ты не авторизован! Используй команду /start."
-
 func (b *Bot) handleError(chatID int64, err error) {
-	switch err {
+	msg := tgbotapi.NewMessage(chatID, "Произошла неизвестаня ошибка.")
 
+	switch err {
+	case errInvalidURL:
+		msg.Text = "Это невальдная ссылка!"
+		b.bot.Send(msg)
+	case errUnauthorized:
+		msg.Text = "Ты не авторизован! Используй команду /start."
+		b.bot.Send(msg)
+	case errUnableToSave:
+		msg.Text = "Увы, не удалось сохранить ссылку. Попробуй ещё раз позже."
+		b.bot.Send(msg)
+	default:
+		b.bot.Send(msg)
 	}
 }
