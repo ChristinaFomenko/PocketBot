@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/KrisInferno/PocketBot/pkg/config"
 	"github.com/KrisInferno/PocketBot/pkg/repository"
 	"github.com/KrisInferno/PocketBot/pkg/repository/boltdb"
 	"github.com/KrisInferno/PocketBot/pkg/server"
@@ -12,28 +13,33 @@ import (
 )
 
 func main() {
-	bot, err := tgbotapi.NewBotAPI("1635881340:AAFQHRfSYiw1b59pFYN1AQusKg9PJLd5Lf8")
+	cfg, err := config.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	bot, err := tgbotapi.NewBotAPI(cfg.TelegramToken)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	bot.Debug = true
 
-	pocketClient, err := pocket.NewClient("98014-5129f80dad64c668d4079cf4")
+	pocketClient, err := pocket.NewClient(cfg.PocketConsumerKey)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	db, err := initDB()
+	db, err := initDB(cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	tokenRepository := boltdb.NewTokenRepository(db)
 
-	telegramBot := telegram.NewBot(bot, pocketClient, tokenRepository, "http://localhost/")
+	telegramBot := telegram.NewBot(bot, pocketClient, tokenRepository, cfg.AuthServerUrl, cfg.Messages)
 
-	authorizationServer := server.NewAuthorizationServer(pocketClient, tokenRepository, "https://t.me/pocket_on_helper_bot")
+	authorizationServer := server.NewAuthorizationServer(pocketClient, tokenRepository, cfg.TelegramBotURL)
 
 	go func() {
 		if err := telegramBot.Start(); err != nil {
@@ -47,8 +53,8 @@ func main() {
 
 }
 
-func initDB() (*bolt.DB, error) {
-	db, err := bolt.Open("bot.db", 0600, nil)
+func initDB(cfg *config.Config) (*bolt.DB, error) {
+	db, err := bolt.Open(cfg.DBPath, 0600, nil)
 	if err != nil {
 		return nil, err
 	}
